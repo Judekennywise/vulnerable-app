@@ -39,12 +39,6 @@ app.get('/users', (req, res) => {
   ]);
 });
 
-// A4:2017-XXE
-app.post('/parse-xml', bodyParser.text(), (req, res) => {
-  const xml = req.body;
-  const doc = libxmljs.parseXml(xml, { noent: true });
-  res.send(doc.toString());
-});
 
 // A5:2017-Broken Access Control
 app.get('/admin', (req, res) => {
@@ -99,6 +93,24 @@ app.get('/fetch', (req, res) => {
       }
     });
   });
+
+  // Bad: Insecure session management
+app.get('/session-info', (req, res) => {
+  // Expose session details
+  res.json({
+    sessionId: req.sessionID,
+    session: req.session,
+    cookies: req.cookies
+  });
+});
+
+// Storing sensitive data without encryption
+app.post('/credit-card', bodyParser.json(), (req, res) => {
+  // Store credit card in plain text
+  db.run(`INSERT INTO payments (card_number, cvc) VALUES (?, ?)`,
+    [req.body.number, req.body.cvc]);
+  res.send('Card stored');
+});
   
   // Another SSRF example using different protocol
   app.post('/export', bodyParser.json(), (req, res) => {
